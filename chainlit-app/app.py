@@ -7,7 +7,7 @@ import chainlit as cl
 
 def get_runnable():
     runnable = RemoteRunnable(
-        "http://localhost:8001/test/",
+        "http://localhost:8001/chatbot/",
         headers={
             "thread_id": cl.context.session.thread_id,
         },

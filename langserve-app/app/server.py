@@ -2,45 +2,17 @@
 # langserve-app/app/server.py
 """Example LangChain server exposes a retriever."""
 from fastapi import FastAPI, Request
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
-from langchain_google_vertexai import ChatVertexAI
+from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
-
-from langchain_core.prompts import MessagesPlaceholder
-
-from pydantic import BaseModel, Field
-from typing import List, Union
-
+from app.chatbot import chatbot_chain, InputChat
+# from app.rag_qa import rag_qa_chain, ChatHistory
 import uuid
-
 from literalai import LiteralClient
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = LiteralClient()
-
-
-class InputChat(BaseModel):
-    """Input schema for the chatbot endpoint."""
-    messages: List[Union[HumanMessage, AIMessage, SystemMessage]] = Field(
-        ...,
-        description="The chat messages representing the current conversation.",
-    )
-
-
-model = ChatVertexAI(model="gemini-1.5-flash", stream=True)
-
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", "You're a very knowledgeable historian who provides accurate and eloquent answers to historical questions."),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
-# runnable = prompt | model | StrOutputParser()
-
-chatbot_chain = (prompt | model).with_types(input_type=InputChat)
 
 
 def per_req_config_modifier(config, request):
@@ -73,10 +45,21 @@ async def set_context_vars(request: Request, call_next):
 # /stream
 add_routes(
     app,
-    chatbot_chain,
-    config_keys=["callbacks"],
-    per_req_config_modifier=per_req_config_modifier,
-    path="/test",
+    chatbot_chain.with_types(input_type=InputChat),
+    path="/chatbot",
+    enable_feedback_endpoint=True,
+    enable_public_trace_link_endpoint=True,
+    playground_type="chat",
+)
+
+
+# Enable CORS for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 if __name__ == "__main__":

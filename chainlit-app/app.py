@@ -1,37 +1,11 @@
-# chainlit-app/app.py
+# app.py
 
 from typing import Dict, Optional
-from operator import itemgetter
 import chainlit as cl
 from chainlit.types import ThreadDict
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
-from langchain_google_vertexai import ChatVertexAI
-from langchain.schema.runnable.config import RunnableConfig
 from langchain.memory import ConversationBufferMemory
-
-
-def setup_runnable() -> None:
-    """Sets up the main runnable pipeline with a conversation model, prompt, and memory history."""
-    memory = cl.user_session.get("memory")  # Retrieve conversation memory
-    model = ChatVertexAI(model="gemini-1.5-flash", stream=True)
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful chatbot"),
-        MessagesPlaceholder(variable_name="history"),
-        ("human", "{question}"),
-    ])
-
-    # Define the runnable pipeline with memory, prompt, and model
-    runnable = (
-        RunnablePassthrough.assign(
-            history=RunnableLambda(lambda: memory.load_memory_variables()) | itemgetter("history")
-        )
-        | prompt
-        | model
-        | StrOutputParser()
-    )
-    cl.user_session.set("runnable", runnable)
+from langchain.schema.runnable.config import RunnableConfig 
+from runnable_setup import setup_runnable
 
 
 @cl.oauth_callback
@@ -46,7 +20,9 @@ async def on_chat_start() -> None:
     """Initializes a new chat session with conversation memory and runnable setup."""
     memory = ConversationBufferMemory(return_messages=True)
     cl.user_session.set("memory", memory)
-    setup_runnable()
+
+    # Set up the runnable pipeline
+    setup_runnable(cl.user_session)
 
 
 @cl.on_chat_resume
@@ -62,7 +38,7 @@ async def on_chat_resume(thread: ThreadDict) -> None:
             memory.chat_memory.add_ai_message(message["output"])
 
     cl.user_session.set("memory", memory)
-    setup_runnable()
+    setup_runnable(cl.user_session)
 
 
 @cl.on_message

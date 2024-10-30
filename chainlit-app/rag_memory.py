@@ -28,12 +28,15 @@ Chat History:
 Question: {question}
 Search Query:"""
 
-ANSWER_TEMPLATE = """You are a scientific expert in human wellness, health \
-optimization, and athletic performance. Answer the user's question with relevant \
+ANSWER_TEMPLATE = """You are NeuroCircadia, a scientific expert in human wellness, health \
+optimization, and athletic performance. Help the user with relevant \
 context from a medical knowledgebase if available. If the user's question is \
 unrelated, politely reassert your role.
 
-Context:
+Chat History:
+{chat_history}
+
+Research Context:
 {context}
 
 Question: {question}"""
@@ -115,7 +118,8 @@ def setup_runnable(user_session) -> None:
             | StrOutputParser() 
             | retriever 
             | _combine_documents),
-        question=itemgetter("question")
+        question=itemgetter("question"),
+        chat_history=itemgetter("chat_history")
     )
 
     # Step 4: Complete RAG pipeline with answer generation

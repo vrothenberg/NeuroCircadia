@@ -34,7 +34,7 @@ def setup_runnable(user_session) -> None:
         None. The runnable pipeline is set directly in the `user_session`.
     """
     memory = user_session.get("memory")  # Retrieve conversation memory
-    # rprint(memory)  # Debugging output for memory inspection (can be removed in production)
+    rprint(memory)  # Debugging output for memory inspection (can be removed in production)
     
     # Initialize the model and prompt for the pipeline
     model = ChatVertexAI(model="gemini-1.5-flash", stream=True)

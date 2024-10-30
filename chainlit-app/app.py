@@ -5,7 +5,8 @@ import chainlit as cl
 from chainlit.types import ThreadDict
 from langchain.memory import ConversationBufferMemory
 from langchain.schema.runnable.config import RunnableConfig 
-from runnable_setup import setup_runnable
+# from chatbot_memory import setup_runnable
+from rag_memory import setup_runnable
 
 
 @cl.oauth_callback
